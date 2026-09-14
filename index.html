@@ -4200,7 +4200,6 @@ async function fetchTraktList(url) {
         const type = entry.type === 'movie' ? 'movie' : 'tv';
         results.push({ id: media.ids.tmdb, type, title: media.title || null });
       }
-      console.log(`Trakt page ${page}: ${data.length} items, total: ${results.length}, ex:`, results.slice(-3).map(r=>r.title));
 
       // Vérifier s'il y a d'autres pages via les headers
       const totalPages = parseInt(res.headers.get('X-Pagination-Page-Count') || '1');
