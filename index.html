@@ -1087,11 +1087,11 @@ body.light #helpOverlay details.faq-q { border-color: rgba(0,0,0,0.1); }
     </details>
     <details class="faq-q">
       <summary>Où sont stockées mes clés API ?</summary>
-      <div class="help-li">Uniquement dans le stockage local de votre navigateur (localStorage). Elles ne transitent que vers les API concernées : TMDB et Trakt — jamais ailleurs.</div>
+      <div class="help-li">Uniquement dans le stockage local de votre navigateur (localStorage). Elles ne transitent que vers les API concernées : TMDB, Trakt et MDBList — jamais ailleurs.</div>
     </details>
     <details class="faq-q">
-      <summary>Pourquoi MDBList n'est-il pas disponible ?</summary>
-      <div class="help-li">L'API MDBList n'autorise pas les appels directs depuis un navigateur (pas de CORS) : il faut un proxy auto-hébergé. Cette fonctionnalité est donc réservée à la version locale de l'outil.</div>
+      <summary>Comment utiliser mes listes MDBList ?</summary>
+      <div class="help-li">Renseignez votre clé API MDBList dans <strong>🔑 Clés API</strong> (obtenue sur <a href="https://mdblist.com/preferences/" target="_blank">mdblist.com/preferences</a>), puis cliquez sur <strong>📋 MDBList</strong> dans la section « Collez l'URL d'une liste » pour charger vos listes.</div>
     </details>
     <details class="faq-q">
       <summary>Le mode clair change-t-il le wallpaper exporté ?</summary>
@@ -1216,13 +1216,14 @@ body.light #helpOverlay details.faq-q { border-color: rgba(0,0,0,0.1); }
         <span class="auto-sect-title">Collez l'URL d'une liste</span>
       </div>
       <div class="auto-custom-desc">
-        Supporte <em>TMDB</em> (themoviedb.org/list/…) et <em>Trakt</em> (trakt.tv/users/…/lists/…).
+        Supporte <em>TMDB</em> (themoviedb.org/list/…), <em>Trakt</em> (trakt.tv/users/…/lists/…) et <em>MDBList</em> (mdblist.com/lists/…).
       </div>
 
       <!-- Mes listes MDBList -->
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Mes listes :</span>
         <button class="auto-btn-test" onclick="loadMyTraktLists()" style="background:#2a1113;border-color:rgba(237,66,69,0.55);color:#f8a5a7">📋 Trakt</button>
+        <button class="auto-btn-test" onclick="loadMyMdbLists()" style="background:#0d2a1f;border-color:rgba(52,211,153,0.55);color:#6ee7b7">📋 MDBList</button>
         <button class="auto-btn-test" onclick="loadRecentLists()" title="Listes utilisées récemment (TMDB, Trakt, MDBList)" style="background:#241d0a;border-color:rgba(226,168,37,0.55);color:#f0c44f">🕘 Récentes</button>
         <span id="mdbMyListsRow" style="display:none;flex:1;min-width:280px;gap:6px;align-items:center">
           <select id="mdbMyLists" style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 8px;font-family:'Outfit',sans-serif;font-size:12px;outline:none"></select>
@@ -1440,6 +1441,29 @@ body.light #helpOverlay details.faq-q { border-color: rgba(0,0,0,0.1); }
         <button class="api-btn-test" onclick="testTraktKey()" style="border-color:rgba(237,88,37,0.4);color:#ed5825">Tester</button>
         <button class="api-btn-save" onclick="saveTraktKey()" style="background:#ed5825;border-color:#ed5825">Enregistrer</button>
         <button class="api-btn-clear" onclick="clearTraktKey()">Supprimer</button>
+      </div>
+    </div>
+
+    <!-- ── MDBLIST ── -->
+    <div class="keys-section">
+      <div class="keys-section-title" style="color:#34d399">📋 MDBList</div>
+      <div class="keys-section-desc">
+        Pour utiliser vos listes MDBList.<br>
+        Obtenez votre clé gratuite sur <a href="https://mdblist.com/preferences/" target="_blank" style="color:#34d399">mdblist.com/preferences</a> (section « API Access »).
+      </div>
+      <div class="api-input-wrap">
+        <input type="password" id="mdbKeyInput" placeholder="Clé API MDBList…">
+        <button class="api-eye" onclick="toggleMdbVis()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="api-status" id="mdbApiStatus"></div>
+      <div class="keys-actions">
+        <button class="api-btn-test" onclick="testMdbKey()" style="border-color:rgba(52,211,153,0.4);color:#34d399">Tester</button>
+        <button class="api-btn-save" onclick="saveMdbKey()" style="background:#34d399;border-color:#34d399">Enregistrer</button>
+        <button class="api-btn-clear" onclick="clearMdbKey()">Supprimer</button>
       </div>
     </div>
 
@@ -2436,14 +2460,17 @@ function openKeysModal() {
   document.getElementById('apiKeyInput').value   = TMDB_KEY;
   document.getElementById('traktKeyInput').value = TRAKT_KEY;
   document.getElementById('traktUserInput').value = TRAKT_USER;
+  document.getElementById('mdbKeyInput').value = MDBLIST_KEY;
   // Masquer tous les champs
-  ['apiKeyInput','traktKeyInput'].forEach(id => {
+  ['apiKeyInput','traktKeyInput','mdbKeyInput'].forEach(id => {
     document.getElementById(id).type = 'password';
   });
   document.getElementById('apiStatus').className     = 'api-status';
   document.getElementById('apiStatus').textContent   = TMDB_KEY  ? '✅ Clé enregistrée' : '';
   document.getElementById('traktApiStatus').className   = 'api-status';
   document.getElementById('traktApiStatus').textContent = TRAKT_KEY ? '✅ Clé enregistrée' : '';
+  document.getElementById('mdbApiStatus').className   = 'api-status';
+  document.getElementById('mdbApiStatus').textContent = MDBLIST_KEY ? '✅ Clé enregistrée' : '';
   document.getElementById('keysmodal-overlay').classList.add('open');
 }
 function closeKeysModal() {
@@ -2506,6 +2533,44 @@ function clearTraktKey() {
   updKeysBtn(); showToast('🗑️ Clé Trakt supprimée');
 }
 function updTraktBtn() { updKeysBtn(); }
+
+async function testMdbKey() {
+  const key    = document.getElementById('mdbKeyInput').value.trim();
+  const status = document.getElementById('mdbApiStatus');
+  if (!key) { status.className = 'api-status err'; status.textContent = '❌ Saisissez une clé d\'abord'; return; }
+  status.className = 'api-status checking'; status.textContent = '⏳ Vérification…';
+  try {
+    const res = await fetch(`https://api.mdblist.com/lists/user?apikey=${encodeURIComponent(key)}`);
+    if (res.ok) {
+      status.className = 'api-status ok'; status.textContent = '✅ Clé MDBList valide !';
+    } else if (res.status === 401 || res.status === 403) {
+      status.className = 'api-status err'; status.textContent = '❌ Clé invalide';
+    } else {
+      status.className = 'api-status err'; status.textContent = `❌ Erreur ${res.status}`;
+    }
+  } catch(e) {
+    status.className = 'api-status err'; status.textContent = '❌ Erreur réseau';
+  }
+}
+function toggleMdbVis() {
+  const i = document.getElementById('mdbKeyInput');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+function saveMdbKey() {
+  const key = document.getElementById('mdbKeyInput').value.trim();
+  if (!key) { document.getElementById('mdbApiStatus').textContent = '❌ Clé vide'; return; }
+  MDBLIST_KEY = key; localStorage.setItem('mdblist_api_key', key);
+  document.getElementById('mdbApiStatus').className = 'api-status ok';
+  document.getElementById('mdbApiStatus').textContent = '✅ Clé MDBList enregistrée';
+  updKeysBtn(); showToast('🔑 Clé MDBList enregistrée');
+}
+function clearMdbKey() {
+  if (!confirm('Supprimer la clé MDBList ?')) return;
+  MDBLIST_KEY = ''; localStorage.removeItem('mdblist_api_key');
+  document.getElementById('mdbKeyInput').value = '';
+  document.getElementById('mdbApiStatus').textContent = '';
+  updKeysBtn(); showToast('🗑️ Clé MDBList supprimée');
+}
 function openApiModal()  { openKeysModal(); }
 function closeApiModal() { closeKeysModal(); }
 function onApiOverlayClick() {}
@@ -4115,6 +4180,7 @@ async function filterOutCartoon(pool) {
 
 // ── Listes externes Trakt / MDBList ──────────────────────────────────────
 let TRAKT_KEY = localStorage.getItem('trakt_api_key') || '';
+let MDBLIST_KEY = localStorage.getItem('mdblist_api_key') || '';
 
 async function fetchExternList(url) {
   if (!url) return [];
@@ -4125,10 +4191,7 @@ async function fetchExternList(url) {
 async function fetchExternListInner(url) {
   if (url.includes('themoviedb.org') || url.includes('tmdb.org')) return await fetchTMDBList(url);
   if (url.includes('trakt.tv') || url.includes('trakt.app')) return await fetchTraktList(url);
-  if (url.includes('mdblist.com') || url.startsWith('mdblist-id:')) {
-    showToast('📋 MDBList n\'est pas disponible dans cette version (proxy requis)', true);
-    return [];
-  }
+  if (url.includes('mdblist.com') || url.startsWith('mdblist-id:')) return await fetchMdbList(url);
   // Essayer de détecter un ID numérique TMDB pur
   if (/^\d+$/.test(url.trim())) return await fetchTMDBList(`https://www.themoviedb.org/list/${url.trim()}`);
   showToast('URL non reconnue — supporte themoviedb.org et trakt.tv', true);
@@ -4208,6 +4271,85 @@ async function fetchTraktList(url) {
     }
   } catch(e) { showToast('Trakt : erreur réseau', true); }
   return results;
+}
+
+// ── Liste MDBList (par id numérique ou par URL mdblist.com/lists/user/nom) ─
+async function fetchMdbList(url) {
+  if (!MDBLIST_KEY) { showToast('🔑 Configurez votre clé API MDBList d\'abord', true); openKeysModal(); return []; }
+
+  let base;
+  if (url.startsWith('mdblist-id:')) {
+    base = `https://api.mdblist.com/lists/${url.slice(11)}/items`;
+  } else {
+    const match = url.match(/mdblist\.com\/lists\/([^/?#]+)\/([^/?#]+)/);
+    if (!match) { showToast('URL MDBList invalide (format: mdblist.com/lists/user/nom-de-liste)', true); return []; }
+    const [, user, list] = match;
+    base = `https://api.mdblist.com/lists/${encodeURIComponent(user)}/${encodeURIComponent(list)}/items`;
+  }
+
+  const results = [];
+  try {
+    let cursor = null;
+    let guard  = 0;
+    while (guard++ < 10) {
+      const qs  = new URLSearchParams({ apikey: MDBLIST_KEY, limit: '1000' });
+      if (cursor) qs.set('cursor', cursor);
+      const res = await fetch(`${base}?${qs}`);
+      if (!res.ok) {
+        if (res.status === 404) showToast(`MDBList : liste introuvable — vérifie l'URL et que la liste est publique`, true);
+        else if (res.status === 401) showToast('MDBList : clé API invalide', true);
+        else showToast(`MDBList erreur ${res.status}`, true);
+        break;
+      }
+      const data = await res.json();
+      for (const m of (data.movies || [])) {
+        const tmdb = m.ids?.tmdb || m.id;
+        if (tmdb) results.push({ id: tmdb, type: 'movie', title: m.title || null });
+      }
+      for (const s of (data.shows || [])) {
+        const tmdb = s.ids?.tmdb || s.id;
+        if (tmdb) results.push({ id: tmdb, type: 'tv', title: s.title || null });
+      }
+      cursor = data.pagination?.next_cursor || data.next_cursor || null;
+      const hasMore = res.headers.get('X-Has-More') === 'true' || !!cursor;
+      if (!hasMore) break;
+    }
+    if (!results.length) showToast('MDBList : liste vide ou introuvable', true);
+  } catch(e) { showToast('MDBList : erreur réseau', true); }
+  return results;
+}
+
+// ── Mes listes MDBList (via la clé API — pas besoin de pseudo) ─────────────
+async function loadMyMdbLists() {
+  if (!MDBLIST_KEY) { showToast('🔑 Configurez votre clé API MDBList d\'abord', true); openKeysModal(); return; }
+  const row = document.getElementById('mdbMyListsRow');
+  const sel = document.getElementById('mdbMyLists');
+  row.style.display = 'inline-flex';
+  updateMdbInsertButtons();
+  sel.innerHTML = '<option>⏳ Chargement…</option>';
+  try {
+    const res = await fetch(`https://api.mdblist.com/lists/user?apikey=${encodeURIComponent(MDBLIST_KEY)}&sort=name`);
+    if (res.status === 401) {
+      sel.innerHTML = '<option>Clé invalide</option>';
+      showToast('MDBList : clé API invalide', true);
+      return;
+    }
+    if (!res.ok) { sel.innerHTML = `<option>Erreur ${res.status}</option>`; return; }
+    const lists = await res.json();
+    if (!Array.isArray(lists) || !lists.length) {
+      sel.innerHTML = '<option>Aucune liste</option>';
+      showToast('MDBList : aucune liste sur ce compte', true);
+      return;
+    }
+    sel.innerHTML = lists
+      .map(l => {
+        const val = `mdblist-id:${l.id}`;
+        listLabels[val] = `MDBList · ${l.name}`;
+        return `<option value="${esc(val)}">${esc(l.name)}${l.items != null ? ` (${l.items})` : ''}</option>`;
+      })
+      .join('');
+    showToast(`✅ ${lists.length} liste(s) MDBList`);
+  } catch(e) { sel.innerHTML = '<option>Erreur réseau</option>'; }
 }
 
 // ── Mes listes (dropdown partagé MDBList / Trakt / Récentes) ──────────────
